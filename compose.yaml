@@ -431,6 +431,26 @@ services:
       - --wait
       - "300"
 
+  # oac-tree sequencer: runs operational procedures (procedures/*.xml)
+  # against the plant through the gateways. `make procedure P=<name>`
+  oac-tree:
+    image: epics-lab/oac-tree:${EPICS_LAB_TAG:-dev}
+    build: images/oac-tree
+    profiles: [tools]
+    networks: [epics]
+    restart: "no"
+    depends_on:
+      ca-gateway: {condition: service_started}
+      pva-gateway: {condition: service_started}
+    environment:
+      EPICS_CA_ADDR_LIST: ca-gateway
+      EPICS_CA_AUTO_ADDR_LIST: "NO"
+      EPICS_PVA_ADDR_LIST: pva-gateway
+      EPICS_PVA_AUTO_ADDR_LIST: "NO"
+    volumes:
+      - ./procedures:/procedures:ro
+    command: ["-f", "/procedures/vacuum_pumpdown.xml", "-v", "INFO"]
+
   alarm-import:
     image: epics-lab/alarm-server:${EPICS_LAB_TAG:-dev}
     build: images/alarm-server

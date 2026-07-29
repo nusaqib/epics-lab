@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Example oac-tree procedure: automated vacuum pumpdown.
+
+    1. start the turbo pump
+    2. wait until the chamber pressure is below the interlock threshold
+    3. open the gate valve and verify it reports open
+
+  Run it with:  make procedure            (or P=vacuum_pumpdown)
+  All PV access goes through the CA gateway (env set in compose.yaml).
+-->
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
+           name="Vacuum pumpdown and gate valve opening"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
+    <Plugin>liboac-tree-ca.so</Plugin>
+    <Plugin>liboac-tree-control.so</Plugin>
+    <Sequence>
+        <Message text="Starting turbo pump LAB:VAC:PMP1"/>
+        <ChannelAccessWrite name="start-pump"
+            channel="LAB:VAC:PMP1:RUN"
+            timeout="5.0"
+            type='{"type":"uint16"}'
+            value='1'/>
+
+        <Message text="Waiting for chamber pressure below 1.0e-4 mbar (up to 5 min)"/>
+        <WaitForCondition timeout="300">
+            <LessThan leftVar="pressure" rightVar="threshold"/>
+        </WaitForCondition>
+
+        <Message text="Vacuum OK - opening gate valve LAB:VAC:VLV1"/>
+        <ChannelAccessWrite name="open-valve"
+            channel="LAB:VAC:VLV1:CMD"
+            timeout="5.0"
+            type='{"type":"uint16"}'
+            value='1'/>
+
+        <ChannelAccessRead name="check-valve"
+            channel="LAB:VAC:VLV1:STS"
+            timeout="5.0"
+            outputVar="valve_status"/>
+        <Condition name="valve-is-open" varName="valve_status"/>
+        <Message text="Pumpdown complete: valve open, interlock permitted"/>
+    </Sequence>
+    <Workspace>
+        <!-- live chamber pressure, monitored over Channel Access -->
+        <ChannelAccessClient name="pressure"
+            channel="LAB:VAC:GA1:PRES"
+            type='{"type":"float64"}'/>
+        <Local name="threshold"
+            type='{"type":"float64"}'
+            value='1.0e-4'/>
+        <Local name="valve_status"
+            type='{"type":"uint16"}'
+            value='0'/>
+    </Workspace>
+</Procedure>

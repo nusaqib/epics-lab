@@ -15,6 +15,7 @@ by an integration test suite.
 | Alarms | `alarm-server`, `kafka` | Phoebus alarm server + Kafka (KRaft) |
 | PV directory | `channelfinder`, `channelfinder-es`, `recceiver` | ChannelFinder + Elasticsearch, auto-populated via RecSync |
 | PV browser | `pvinfo` | PV Info web UI (nginx, same-origin proxies to CF + archiver) |
+| Automation | `oac-tree` | ITER oac-tree sequencer — operational procedures as behavior trees (`procedures/*.xml`) |
 | Put audit | `caputlog` | caPutLog (TRAPWRITE) → central iocLogServer; `make caputlog` to follow |
 | Operator UI | Phoebus (desktop) | `.bob` displays + client settings in `phoebus/` |
 | Observability | `pv-exporter`, `prometheus`, `grafana` | PV → Prometheus bridge + dashboards |
@@ -35,6 +36,7 @@ graph LR
     CF --> ES[(Elasticsearch)]
     PVI[PV Info :8082] --> CF & AA
     C & V & M -->|trapped puts| CPL[caputlog]
+    OAC[oac-tree sequencer] --> GW1 & GW2
     PE[pv-exporter :9114] --> C & V & M
     P[Prometheus :9090] --> PE
     G[Grafana :3000] --> P
@@ -86,6 +88,7 @@ docker compose restart ioc-cryo      # restart one service (e.g. after db edits)
 make monitoring    # start Prometheus + Grafana profile
 make console I=ioc-vacuum   # attach to an IOC shell (detach: Ctrl-], then quit)
 make caputlog      # follow the CA write audit trail (who changed which PV)
+make procedure     # run an oac-tree procedure (P=<name>, default vacuum_pumpdown)
 make clean         # stop and DELETE all data volumes (archive, autosave, ...)
 ```
 
@@ -111,11 +114,12 @@ All PVs follow `LAB:<AREA>:<DEVICE>:<SIGNAL>` (see
 
 ```
 compose.yaml          orchestration of the full stack
-images/               container image definitions (epics, archiver, alarm-server, channelfinder, recceiver, pvinfo, pva-gateway)
+images/               container image definitions (epics, archiver, alarm-server, channelfinder, recceiver, pvinfo, oac-tree, pva-gateway)
 iocs/<name>/          per-IOC instance config: st.cmd, db/, req/ (mounted read-only)
 gateway/              CA gateway pvlist/access, PVA gateway config
 archiver/             PV list submitted to the archiver
 alarms/               alarm server settings + alarm tree XML
+procedures/           oac-tree operational procedures (behavior-tree XML)
 channelfinder/        ChannelFinder settings + RecSync (recceiver) config
 phoebus/              operator displays and client settings
 services/pv-exporter/ PV -> Prometheus exporter

@@ -1,7 +1,7 @@
 COMPOSE ?= docker compose
 
 .DEFAULT_GOAL := help
-.PHONY: help build up down restart status logs bootstrap test monitoring console caputlog clean
+.PHONY: help build up down restart status logs bootstrap test monitoring console caputlog procedure clean
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -40,6 +40,9 @@ console: ## Attach to an IOC shell via procServ (use I=<service>, default ioc-cr
 
 caputlog: ## Follow the central log of CA puts (who changed which PV)
 	$(COMPOSE) exec caputlog tail -f /logs/caput.log
+
+procedure: ## Run an oac-tree procedure (P=<name>, default vacuum_pumpdown)
+	$(COMPOSE) --profile tools run --rm oac-tree -f /procedures/$(or $(P),vacuum_pumpdown).xml -v INFO
 
 clean: ## Stop everything and remove volumes (DESTROYS archived data)
 	$(COMPOSE) --profile monitoring --profile test --profile tools down -v

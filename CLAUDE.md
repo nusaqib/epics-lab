@@ -11,6 +11,7 @@ everything is Docker Compose (`compose.yaml` is the source of truth).
 - `make test` — integration suite (containerized pytest; needs the stack up)
 - `make console I=<ioc-service>` — attach to an IOC shell via procServ
 - `make caputlog` — follow the CA write audit trail
+- `make procedure P=<name>` — run an oac-tree procedure from procedures/
 - `make monitoring` — Prometheus + Grafana profile
 
 ## Service URLs (host)

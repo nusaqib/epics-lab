@@ -62,6 +62,16 @@ module to the generic IOC).
    to `images/epics/top/labiocApp/src/Makefile`.
 3. `make build` and restart the IOCs.
 
+## Operational procedures (oac-tree)
+
+Procedures live in `procedures/*.xml` (behavior-tree XML, namespace
+`http://codac.iter.org/sup/oac-tree`). Use `vacuum_pumpdown.xml` as the
+template: declare plant PVs as `ChannelAccessClient`/`PvAccessClient`
+workspace variables, then compose `Sequence`/`Fallback`/`WaitForCondition`
+instructions. Validate without executing:
+`docker compose --profile tools run --rm oac-tree -f /procedures/<name>.xml -V`,
+then run with `make procedure P=<name>`.
+
 ## Displays
 
 Edit `phoebus/displays/*.bob` with the Phoebus Display Builder (run Phoebus

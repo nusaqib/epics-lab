@@ -71,6 +71,12 @@ dependents: `docker compose restart ca-gateway pva-gateway alarm-server`.
 `docker compose --profile tools run --rm alarm-import`. Clients pick up the
 new tree immediately (compacted Kafka topic is the source of truth).
 
+**Run an operational procedure** — `make procedure P=vacuum_pumpdown` runs
+an oac-tree behavior-tree procedure (`procedures/*.xml`) against the plant
+through the gateways; add `-V` via a custom run to validate a procedure
+without executing it:
+`docker compose --profile tools run --rm oac-tree -f /procedures/<name>.xml -V`.
+
 **Audit CA writes** — `make caputlog` follows the central put log (who
 changed which PV, old → new value). The file lives on the `caputlog-data`
 volume (`/logs/caput.log`, size-rotated by iocLogServer).

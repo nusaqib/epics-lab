@@ -110,6 +110,16 @@ same data with per-PV archiver links; its nginx same-origin-proxies
 ChannelFinder and the archiver retrieval webapp because ChannelFinder
 4.7.x has no CORS configuration.
 
+### Operational automation (oac-tree)
+
+The `oac-tree` service packages ITER's behavior-tree sequencer (built from
+the `oac-tree-bundle` superbuild: core, server, and the CA/PVXS/control/
+mathexpr plugins, no GUI). Procedures are XML behavior trees versioned in
+`procedures/` and run on demand (`make procedure P=<name>`), talking to the
+plant through the gateways like any other operator. The example
+`vacuum_pumpdown.xml` starts the turbo pump, waits for the chamber to reach
+the interlock threshold, then opens and verifies the gate valve.
+
 ### Put audit trail (caPutLog)
 
 Every IOC loads a shared access-security file (`iocs/common/lab.acf`) whose
@@ -147,5 +157,6 @@ healthchecks (`make status`).
 Every component is pinned: EPICS base `R7.0.8.1`, iocStats `3.2.0`, autosave
 `R5-11`, pcas `v4.13.3`, ca-gateway `v2.1.3`, procServ `2.8.0`, p4p `4.2.0`,
 Archiver Appliance `1.1.0`, Phoebus `v4.7.3`, ChannelFinder `4.7.3`,
-RecSync `1.9.6`, caPutLog `R4.2`, PV Info `2.8.2`, and upstream images via `.env`. Upgrades are one-line
+RecSync `1.9.6`, caPutLog `R4.2`, PV Info `2.8.2`, oac-tree bundle `v1.5`
+(+ PVXS `1.5.2`), and upstream images via `.env`. Upgrades are one-line
 ARG/env changes validated by `make test`.
