@@ -6,8 +6,9 @@ archived (Archiver Appliance, `archiver/pvlist.txt` + `info(archive)` tag),
 **Alm** = in the alarm tree (`alarms/lab_alarms.xml`), **Prom** = exported
 to Prometheus (`monitoring/pv-exporter.yaml`).
 
-This file is the human-readable index; the *live* index is ChannelFinder
-(see [Discovering PVs](#discovering-pvs-at-runtime)).
+This file is the human-readable index; the *live* index is ChannelFinder —
+browse it at <http://localhost:8082/pvinfo/> (PV Info web UI) or query the
+REST API (see [Discovering PVs](#discovering-pvs-at-runtime)).
 
 ## Cryogenics — `LAB:CRYO:*` (ioc-cryo)
 

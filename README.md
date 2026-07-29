@@ -14,6 +14,7 @@ by an integration test suite.
 | Archiving | `archiver`, `archiver-db` | EPICS Archiver Appliance + MariaDB |
 | Alarms | `alarm-server`, `kafka` | Phoebus alarm server + Kafka (KRaft) |
 | PV directory | `channelfinder`, `channelfinder-es`, `recceiver` | ChannelFinder + Elasticsearch, auto-populated via RecSync |
+| PV browser | `pvinfo` | PV Info web UI (nginx, same-origin proxies to CF + archiver) |
 | Put audit | `caputlog` | caPutLog (TRAPWRITE) → central iocLogServer; `make caputlog` to follow |
 | Operator UI | Phoebus (desktop) | `.bob` displays + client settings in `phoebus/` |
 | Observability | `pv-exporter`, `prometheus`, `grafana` | PV → Prometheus bridge + dashboards |
@@ -32,6 +33,7 @@ graph LR
     C & V & M -->|reccaster| RS[recceiver]
     RS --> CF[ChannelFinder :8080]
     CF --> ES[(Elasticsearch)]
+    PVI[PV Info :8082] --> CF & AA
     C & V & M -->|trapped puts| CPL[caputlog]
     PE[pv-exporter :9114] --> C & V & M
     P[Prometheus :9090] --> PE
@@ -63,6 +65,7 @@ make monitoring            # optional: Prometheus + Grafana
 | Archiver Appliance UI | <http://localhost:17665/mgmt/ui/index.html> | manage/pause/resume archived PVs |
 | Archiver data retrieval | `http://localhost:17665/retrieval/data/getData.json?pv=<PV>&from=<ISO>&to=<ISO>` | also `.csv`, `.mat`, `pbraw` |
 | ChannelFinder | <http://localhost:8080/ChannelFinder> | e.g. [`/resources/channels?~name=LAB:CRYO:*`](http://localhost:8080/ChannelFinder/resources/channels?~name=LAB:CRYO:*) — auto-populated by RecSync |
+| PV Info | <http://localhost:8082/pvinfo/> | searchable PV browser on ChannelFinder, with archiver links |
 | Grafana | <http://localhost:3000> | monitoring profile; dashboard *EPICS Lab Overview*; login `admin`/`GRAFANA_ADMIN_PASSWORD` |
 | Prometheus | <http://localhost:9090> | monitoring profile |
 | PV exporter metrics | <http://localhost:9114/metrics> | `epics_pv_value/severity/connected` |
@@ -108,7 +111,7 @@ All PVs follow `LAB:<AREA>:<DEVICE>:<SIGNAL>` (see
 
 ```
 compose.yaml          orchestration of the full stack
-images/               container image definitions (epics, archiver, alarm-server, channelfinder, recceiver, pva-gateway)
+images/               container image definitions (epics, archiver, alarm-server, channelfinder, recceiver, pvinfo, pva-gateway)
 iocs/<name>/          per-IOC instance config: st.cmd, db/, req/ (mounted read-only)
 gateway/              CA gateway pvlist/access, PVA gateway config
 archiver/             PV list submitted to the archiver

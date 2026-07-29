@@ -104,7 +104,11 @@ the **recceiver** service, which syncs it into ChannelFinder with
 the directory with zero configuration. recceiver discovers clients via UDP
 broadcast, which is why the compose network pins the `172.28.0.0/16`
 subnet. Phoebus's ChannelFinder browser is pointed at the service by
-`phoebus/settings.ini`.
+`phoebus/settings.ini`, and the **PV Info** web UI (`pvinfo`, pinned tag,
+served by nginx on :8082) gives operators a searchable browser over the
+same data with per-PV archiver links; its nginx same-origin-proxies
+ChannelFinder and the archiver retrieval webapp because ChannelFinder
+4.7.x has no CORS configuration.
 
 ### Put audit trail (caPutLog)
 
@@ -133,6 +137,7 @@ healthchecks (`make status`).
 | 5075 tcp, 5076 udp | pva-gateway | PV Access |
 | 17665 | archiver | Archiver Appliance UI + retrieval |
 | 8080 | channelfinder | ChannelFinder REST API |
+| 8082 | pvinfo | PV Info web UI |
 | 9092 | kafka | Alarm topics (external listener) |
 | 9114 | pv-exporter | Prometheus metrics |
 | 9090 / 3000 | prometheus / grafana | monitoring profile |
@@ -142,5 +147,5 @@ healthchecks (`make status`).
 Every component is pinned: EPICS base `R7.0.8.1`, iocStats `3.2.0`, autosave
 `R5-11`, pcas `v4.13.3`, ca-gateway `v2.1.3`, procServ `2.8.0`, p4p `4.2.0`,
 Archiver Appliance `1.1.0`, Phoebus `v4.7.3`, ChannelFinder `4.7.3`,
-RecSync `1.9.6`, caPutLog `R4.2`, and upstream images via `.env`. Upgrades are one-line
+RecSync `1.9.6`, caPutLog `R4.2`, PV Info `2.8.2`, and upstream images via `.env`. Upgrades are one-line
 ARG/env changes validated by `make test`.

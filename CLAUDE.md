@@ -17,6 +17,7 @@ everything is Docker Compose (`compose.yaml` is the source of truth).
 
 - Archiver Appliance: http://localhost:17665/mgmt/ui/index.html
 - ChannelFinder: http://localhost:8080/ChannelFinder
+- PV Info (browser UI): http://localhost:8082/pvinfo/
 - Grafana: http://localhost:3000 · Prometheus: http://localhost:9090
 - PV exporter: http://localhost:9114/metrics
 - CA gateway: localhost:5064 · PVA gateway: localhost:5075/5076 · Kafka: localhost:9092

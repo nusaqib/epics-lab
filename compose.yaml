@@ -8,6 +8,7 @@
 #   kafka (+ kafka-init) / alarm-server  Phoebus alarm system
 #   channelfinder (+ channelfinder-es)   ChannelFinder directory service
 #   recceiver                            RecSync server: IOCs -> ChannelFinder
+#   pvinfo                               PV Info web UI on ChannelFinder
 #   caputlog                             central log of trapped CA writes
 #   pv-exporter                          PV -> Prometheus metrics bridge
 #
@@ -333,6 +334,24 @@ services:
     volumes:
       - ./channelfinder/recceiver.conf:/config/recceiver.conf:ro
       - ./channelfinder/channelfinderapi.conf:/etc/channelfinderapi.conf:ro
+
+  pvinfo:
+    image: epics-lab/pvinfo:${EPICS_LAB_TAG:-dev}
+    build: images/pvinfo
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      channelfinder: {condition: service_healthy}
+      archiver: {condition: service_started}
+    ports:
+      - "8082:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/pvinfo/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # ----------------------------------------------------------- Observability
   pv-exporter:

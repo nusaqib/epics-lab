@@ -22,6 +22,7 @@ holds the live alarm configuration and has no persistent volume); plain
 | Archiver Appliance UI | <http://localhost:17665/mgmt/ui/index.html> |
 | Archiver retrieval API | `http://localhost:17665/retrieval/data/getData.json?pv=<PV>` |
 | ChannelFinder | <http://localhost:8080/ChannelFinder> |
+| PV Info (PV browser) | <http://localhost:8082/pvinfo/> |
 | Grafana / Prometheus | <http://localhost:3000> / <http://localhost:9090> (monitoring profile) |
 | PV exporter | <http://localhost:9114/metrics> |
 | CA / PVA gateways | `localhost:5064` / `localhost:5075` |
