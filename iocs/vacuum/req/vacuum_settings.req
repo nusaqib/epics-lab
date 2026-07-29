@@ -1,0 +1,3 @@
+# Operator settings restored across IOC restarts
+$(P):PMP1:RUN
+$(P):VLV1:CMD

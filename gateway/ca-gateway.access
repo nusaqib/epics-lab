@@ -1,0 +1,7 @@
+# CA gateway access security.
+# Development default: everyone may read and write. Tighten UAG/HAG rules
+# here before exposing the gateway beyond a trusted network.
+ASG(DEFAULT) {
+    RULE(1, READ)
+    RULE(1, WRITE)
+}

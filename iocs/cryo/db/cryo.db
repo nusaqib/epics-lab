@@ -1,0 +1,100 @@
+# Cryogenics simulation.
+#
+# A cold head relaxes towards the setpoint while the compressor runs and
+# drifts back to room temperature (293 K) when it is stopped. A shield
+# sensor tracks the cold head with a 40 K offset. Alarm limits are chosen
+# so a stopped compressor drives the temperatures into MAJOR alarm.
+#
+# Macros:  P  PV prefix, e.g. LAB:CRYO
+
+# ---------------------------------------------------------------- setpoint
+record(ao, "$(P):TC1:SP") {
+    field(DESC, "Cold head setpoint")
+    field(EGU,  "K")
+    field(PREC, "2")
+    field(DRVL, "4")
+    field(DRVH, "350")
+    field(VAL,  "80")
+    field(PINI, "YES")
+}
+
+# ------------------------------------------------------------ temperatures
+record(calc, "$(P):TC1:TEMP") {
+    field(DESC, "Cold head temperature")
+    field(SCAN, "1 second")
+    field(INPA, "$(P):TC1:TEMP NPP NMS")
+    field(INPB, "$(P):TC1:SP NPP NMS")
+    field(INPC, "$(P):CMP1:RUN NPP NMS")
+    field(CALC, "A+((C?B:293)-A)*0.05+(RNDM-0.5)*0.2")
+    field(VAL,  "293")
+    field(EGU,  "K")
+    field(PREC, "2")
+    field(HOPR, "350")
+    field(LOPR, "0")
+    field(HIGH, "150")
+    field(HSV,  "MINOR")
+    field(HIHI, "250")
+    field(HHSV, "MAJOR")
+}
+
+record(calc, "$(P):TC2:TEMP") {
+    field(DESC, "Radiation shield temperature")
+    field(SCAN, "1 second")
+    field(INPA, "$(P):TC2:TEMP NPP NMS")
+    field(INPB, "$(P):TC1:TEMP NPP NMS")
+    field(CALC, "A+((B+40)-A)*0.05+(RNDM-0.5)*0.3")
+    field(VAL,  "293")
+    field(EGU,  "K")
+    field(PREC, "2")
+    field(HOPR, "350")
+    field(LOPR, "0")
+    field(HIGH, "200")
+    field(HSV,  "MINOR")
+    field(HIHI, "280")
+    field(HHSV, "MAJOR")
+}
+
+# ---------------------------------------------------------------- heater
+record(calc, "$(P):HTR1:POWER") {
+    field(DESC, "Heater output (simple P controller)")
+    field(SCAN, "1 second")
+    field(INPA, "$(P):TC1:TEMP NPP NMS")
+    field(INPB, "$(P):TC1:SP NPP NMS")
+    field(CALC, "MAX(0,MIN(100,(B-A)*8))")
+    field(EGU,  "%")
+    field(PREC, "1")
+    field(HOPR, "100")
+    field(LOPR, "0")
+}
+
+# ------------------------------------------------------------- compressor
+record(bo, "$(P):CMP1:RUN") {
+    field(DESC, "Compressor run command")
+    field(ZNAM, "Stopped")
+    field(ONAM, "Running")
+    field(VAL,  "1")
+    field(PINI, "YES")
+}
+
+record(bi, "$(P):CMP1:STS") {
+    field(DESC, "Compressor status")
+    field(INP,  "$(P):CMP1:RUN CP MS")
+    field(ZNAM, "Stopped")
+    field(ONAM, "Running")
+    field(ZSV,  "MINOR")
+}
+
+record(calc, "$(P):HE:PRES") {
+    field(DESC, "Helium supply pressure")
+    field(SCAN, "2 second")
+    field(INPA, "$(P):CMP1:RUN NPP NMS")
+    field(CALC, "(A?16:14)+(RNDM-0.5)*0.4")
+    field(EGU,  "bar")
+    field(PREC, "2")
+    field(HOPR, "20")
+    field(LOPR, "10")
+    field(LOW,  "15")
+    field(LSV,  "MINOR")
+    field(LOLO, "13")
+    field(LLSV, "MAJOR")
+}

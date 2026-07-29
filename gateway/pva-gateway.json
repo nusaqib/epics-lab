@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "readOnly": false,
+  "clients": [
+    {
+      "name": "iocs",
+      "provider": "pva",
+      "addrlist": "ioc-cryo ioc-vacuum ioc-motion",
+      "autoaddrlist": false
+    }
+  ],
+  "servers": [
+    {
+      "name": "front",
+      "clients": ["iocs"],
+      "interface": ["0.0.0.0"],
+      "autoaddrlist": false,
+      "statusprefix": "LAB:PVAGW:"
+    }
+  ]
+}

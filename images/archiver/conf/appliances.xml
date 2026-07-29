@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Single-appliance cluster definition. Internal URLs use the compose service
+  hostname `archiver`; data_retrieval_url is what gets handed to clients
+  (e.g. Phoebus Data Browser on the host) and therefore uses localhost with
+  the published port.
+-->
+<appliances>
+  <appliance>
+    <identity>appliance0</identity>
+    <cluster_inetport>archiver:16670</cluster_inetport>
+    <mgmt_url>http://archiver:17665/mgmt/bpl</mgmt_url>
+    <engine_url>http://archiver:17665/engine/bpl</engine_url>
+    <etl_url>http://archiver:17665/etl/bpl</etl_url>
+    <retrieval_url>http://archiver:17665/retrieval/bpl</retrieval_url>
+    <data_retrieval_url>http://localhost:17665/retrieval</data_retrieval_url>
+  </appliance>
+</appliances>

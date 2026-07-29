@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate compose file
+        run: docker compose config -q
+
+      - name: Python syntax
+        run: |
+          python3 -m py_compile scripts/*.py services/pv-exporter/exporter.py tests/*.py
+
+      - name: Shell syntax
+        run: |
+          bash -n images/epics/softioc-entrypoint.sh
+          bash -n images/archiver/archappl-entrypoint.sh
+
+      - name: XML well-formedness
+        run: |
+          python3 - <<'EOF'
+          import glob
+          import xml.etree.ElementTree as ET
+          files = (glob.glob('alarms/*.xml')
+                   + glob.glob('images/archiver/conf/*.xml')
+                   + glob.glob('phoebus/displays/*.bob'))
+          for f in files:
+              ET.parse(f)
+              print(f'ok {f}')
+          EOF
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images
+        run: docker compose --profile test --profile tools build
+
+      - name: Start stack
+        run: docker compose up -d
+
+      - name: Bootstrap (archiver PVs + alarm config)
+        run: |
+          docker compose --profile tools run --rm archiver-bootstrap
+          docker compose --profile tools run --rm alarm-import
+
+      - name: Run integration tests
+        run: docker compose --profile test run --rm tests
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs --tail=300
+
+      - name: Teardown
+        if: always()
+        run: docker compose --profile test --profile tools down -v

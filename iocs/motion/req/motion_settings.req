@@ -1,0 +1,4 @@
+# Operator settings restored across IOC restarts.
+# The target position is deliberately NOT saved — restoring it would
+# command a move on IOC restart.
+$(P):M1:VELO

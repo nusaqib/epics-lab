@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Cryogenics</name>
+  <width>640</width>
+  <height>460</height>
+  <widget type="label" version="2.0.0">
+    <text>Cryogenics</text>
+    <x>20</x><y>15</y><width>300</width><height>30</height>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="20"/>
+    </font>
+  </widget>
+
+  <widget type="group" version="2.0.0">
+    <name>Temperatures</name>
+    <x>20</x><y>60</y><width>290</width><height>170</height>
+    <widget type="label" version="2.0.0">
+      <text>Cold head</text>
+      <x>10</x><y>10</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:CRYO:TC1:TEMP</pv_name>
+      <x>130</x><y>10</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Shield</text>
+      <x>10</x><y>40</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:CRYO:TC2:TEMP</pv_name>
+      <x>130</x><y>40</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Setpoint</text>
+      <x>10</x><y>70</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <pv_name>LAB:CRYO:TC1:SP</pv_name>
+      <x>130</x><y>70</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Heater power</text>
+      <x>10</x><y>100</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:CRYO:HTR1:POWER</pv_name>
+      <x>130</x><y>100</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+  </widget>
+
+  <widget type="group" version="2.0.0">
+    <name>Compressor</name>
+    <x>330</x><y>60</y><width>290</width><height>170</height>
+    <widget type="label" version="2.0.0">
+      <text>Status</text>
+      <x>10</x><y>10</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <pv_name>LAB:CRYO:CMP1:STS</pv_name>
+      <x>130</x><y>10</y><width>20</width><height>20</height>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <actions>
+        <action type="write_pv">
+          <pv_name>LAB:CRYO:CMP1:RUN</pv_name>
+          <value>1</value>
+          <description>Start</description>
+        </action>
+      </actions>
+      <text>Start</text>
+      <x>10</x><y>50</y><width>100</width><height>30</height>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <actions>
+        <action type="write_pv">
+          <pv_name>LAB:CRYO:CMP1:RUN</pv_name>
+          <value>0</value>
+          <description>Stop</description>
+        </action>
+      </actions>
+      <text>Stop</text>
+      <x>130</x><y>50</y><width>100</width><height>30</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>He pressure</text>
+      <x>10</x><y>100</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:CRYO:HE:PRES</pv_name>
+      <x>130</x><y>100</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+  </widget>
+
+  <widget type="stripchart" version="2.1.0">
+    <name>Temperature trend</name>
+    <x>20</x><y>250</y><width>600</width><height>190</height>
+    <y_axes>
+      <y_axis>
+        <title>K</title>
+        <autoscale>true</autoscale>
+      </y_axis>
+    </y_axes>
+    <traces>
+      <trace>
+        <name>TC1</name>
+        <y_pv>LAB:CRYO:TC1:TEMP</y_pv>
+      </trace>
+      <trace>
+        <name>TC2</name>
+        <y_pv>LAB:CRYO:TC2:TEMP</y_pv>
+      </trace>
+    </traces>
+  </widget>
+</display>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Motion</name>
+  <width>640</width>
+  <height>300</height>
+  <widget type="label" version="2.0.0">
+    <text>Motion — Axis 1</text>
+    <x>20</x><y>15</y><width>300</width><height>30</height>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="20"/>
+    </font>
+  </widget>
+
+  <widget type="group" version="2.0.0">
+    <name>Axis 1</name>
+    <x>20</x><y>60</y><width>420</width><height>200</height>
+    <widget type="label" version="2.0.0">
+      <text>Position</text>
+      <x>10</x><y>10</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:MOT:M1:RBV</pv_name>
+      <x>130</x><y>10</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Target</text>
+      <x>10</x><y>40</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <pv_name>LAB:MOT:M1:SP</pv_name>
+      <x>130</x><y>40</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Velocity</text>
+      <x>10</x><y>70</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="textentry" version="3.0.0">
+      <pv_name>LAB:MOT:M1:VELO</pv_name>
+      <x>130</x><y>70</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Done moving</text>
+      <x>10</x><y>100</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <pv_name>LAB:MOT:M1:DMOV</pv_name>
+      <x>130</x><y>100</y><width>20</width><height>20</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Low / High limit</text>
+      <x>10</x><y>130</y><width>110</width><height>20</height>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <pv_name>LAB:MOT:M1:LLS</pv_name>
+      <x>130</x><y>130</y><width>20</width><height>20</height>
+      <on_color>
+        <color name="MAJOR" red="255" green="0" blue="0"/>
+      </on_color>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <pv_name>LAB:MOT:M1:HLS</pv_name>
+      <x>160</x><y>130</y><width>20</width><height>20</height>
+      <on_color>
+        <color name="MAJOR" red="255" green="0" blue="0"/>
+      </on_color>
+    </widget>
+  </widget>
+
+  <widget type="scaledslider" version="2.0.0">
+    <name>Target slider</name>
+    <pv_name>LAB:MOT:M1:SP</pv_name>
+    <x>460</x><y>60</y><width>140</width><height>200</height>
+    <horizontal>false</horizontal>
+    <limits_from_pv>true</limits_from_pv>
+  </widget>
+</display>

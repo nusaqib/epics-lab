@@ -1,0 +1,13 @@
+# RELEASE - Location of external support modules
+#
+# Paths match the container build layout (images/epics/Dockerfile).
+
+IOCSTATS = /opt/epics/modules/iocStats
+AUTOSAVE = /opt/epics/modules/autosave
+RECCASTER = /opt/epics/modules/recsync/client
+CAPUTLOG = /opt/epics/modules/caPutLog
+
+# EPICS Base must appear last
+EPICS_BASE = /opt/epics/base
+
+-include $(TOP)/configure/RELEASE.local

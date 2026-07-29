@@ -1,0 +1,126 @@
+{
+  "uid": "epics-lab",
+  "title": "EPICS Lab Overview",
+  "tags": ["epics"],
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "10s",
+  "time": {"from": "now-30m", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "PVs Connected",
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"refId": "A", "expr": "sum(epics_pv_connected)"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 13}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "PVs in Alarm",
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"refId": "A", "expr": "count(epics_pv_severity > 0) OR vector(0)"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "orange", "value": 1},
+              {"color": "red", "value": 3}
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Cryo Temperatures [K]",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "epics_pv_value{pv=~\"LAB:CRYO:TC.:TEMP\"}",
+          "legendFormat": "{{pv}}"
+        },
+        {
+          "refId": "B",
+          "expr": "epics_pv_value{pv=\"LAB:CRYO:TC1:SP\"}",
+          "legendFormat": "setpoint"
+        }
+      ],
+      "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}, "overrides": []}
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Chamber Pressure [mbar]",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "epics_pv_value{pv=\"LAB:VAC:GA1:PRES\"}",
+          "legendFormat": "GA1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"lineWidth": 2, "scaleDistribution": {"type": "log", "log": 10}}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Axis 1 Position [mm]",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "epics_pv_value{pv=~\"LAB:MOT:M1:(RBV|SP)\"}",
+          "legendFormat": "{{pv}}"
+        }
+      ],
+      "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}, "overrides": []}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "IOC Heartbeats",
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(epics_pv_value{pv=~\"LAB:.*:IOC:HEARTBEAT\"}[1m])",
+          "legendFormat": "{{pv}}"
+        }
+      ],
+      "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}, "overrides": []}
+    }
+  ]
+}

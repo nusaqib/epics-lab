@@ -1,0 +1,23 @@
+# Local environment overrides
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# EPICS build products (if anyone builds the IOC top outside Docker)
+images/epics/top/bin/
+images/epics/top/lib/
+images/epics/top/dbd/
+images/epics/top/db/
+images/epics/top/include/
+images/epics/top/O.*/
+*.local
+
+# Editor / OS noise
+.idea/
+.vscode/
+*.swp
+.DS_Store

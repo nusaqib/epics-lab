@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Alarm configuration for the "Lab" alarm tree.
+  Import with `make bootstrap` (compose service: alarm-import) or from the
+  Phoebus Alarm Tree application.
+-->
+<config name="Lab">
+  <component name="Cryogenics">
+    <pv name="LAB:CRYO:TC1:TEMP">
+      <description>Cold head temperature</description>
+      <enabled>true</enabled>
+      <latching>true</latching>
+      <annunciating>true</annunciating>
+      <guidance>
+        <title>Response</title>
+        <details>Check that the compressor (LAB:CRYO:CMP1:RUN) is running and helium pressure is nominal.</details>
+      </guidance>
+      <display>
+        <title>Cryo screen</title>
+        <details>phoebus/displays/cryo.bob</details>
+      </display>
+    </pv>
+    <pv name="LAB:CRYO:TC2:TEMP">
+      <description>Radiation shield temperature</description>
+      <enabled>true</enabled>
+      <latching>true</latching>
+      <annunciating>true</annunciating>
+    </pv>
+    <pv name="LAB:CRYO:CMP1:STS">
+      <description>Compressor stopped</description>
+      <enabled>true</enabled>
+      <latching>true</latching>
+      <annunciating>true</annunciating>
+    </pv>
+    <pv name="LAB:CRYO:HE:PRES">
+      <description>Helium supply pressure low</description>
+      <enabled>true</enabled>
+      <latching>true</latching>
+      <annunciating>false</annunciating>
+    </pv>
+  </component>
+  <component name="Vacuum">
+    <pv name="LAB:VAC:GA1:PRES">
+      <description>Chamber pressure high</description>
+      <enabled>true</enabled>
+      <latching>true</latching>
+      <annunciating>true</annunciating>
+      <guidance>
+        <title>Response</title>
+        <details>Verify the turbo pump (LAB:VAC:PMP1:RUN) is running. The gate valve interlock closes automatically above 1e-4 mbar.</details>
+      </guidance>
+      <display>
+        <title>Vacuum screen</title>
+        <details>phoebus/displays/vacuum.bob</details>
+      </display>
+    </pv>
+    <pv name="LAB:VAC:ILK:OK">
+      <description>Vacuum interlock not permitted</description>
+      <enabled>true</enabled>
+      <latching>true</latching>
+      <annunciating>true</annunciating>
+    </pv>
+  </component>
+  <component name="Motion">
+    <pv name="LAB:MOT:M1:HLS">
+      <description>Axis 1 at high limit</description>
+      <enabled>true</enabled>
+      <latching>false</latching>
+      <annunciating>false</annunciating>
+    </pv>
+    <pv name="LAB:MOT:M1:LLS">
+      <description>Axis 1 at low limit</description>
+      <enabled>true</enabled>
+      <latching>false</latching>
+      <annunciating>false</annunciating>
+    </pv>
+  </component>
+</config>

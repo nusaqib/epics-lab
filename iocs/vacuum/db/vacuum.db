@@ -1,0 +1,86 @@
+# Vacuum system simulation.
+#
+# A turbo pump spins up when commanded; once it is above 80 % speed the
+# chamber pumps down exponentially towards 3e-9 mbar, otherwise pressure
+# rises back towards 1.2e-3 mbar. A software interlock closes the gate
+# valve whenever the pressure is above 1e-4 mbar.
+#
+# Macros:  P  PV prefix, e.g. LAB:VAC
+
+# ------------------------------------------------------------- turbo pump
+record(bo, "$(P):PMP1:RUN") {
+    field(DESC, "Turbo pump run command")
+    field(ZNAM, "Stopped")
+    field(ONAM, "Running")
+    field(VAL,  "1")
+    field(PINI, "YES")
+}
+
+record(calc, "$(P):PMP1:SPEED") {
+    field(DESC, "Turbo pump speed")
+    field(SCAN, "1 second")
+    field(INPA, "$(P):PMP1:SPEED NPP NMS")
+    field(INPB, "$(P):PMP1:RUN NPP NMS")
+    field(CALC, "MAX(0,MIN(100,A+((B?100:0)-A)*0.08))")
+    field(VAL,  "0")
+    field(EGU,  "%")
+    field(PREC, "1")
+    field(HOPR, "100")
+    field(LOPR, "0")
+}
+
+# ------------------------------------------------------------- gauge
+record(calc, "$(P):GA1:PRES") {
+    field(DESC, "Chamber pressure")
+    field(SCAN, "1 second")
+    field(INPA, "$(P):GA1:PRES NPP NMS")
+    field(INPB, "$(P):PMP1:SPEED NPP NMS")
+    field(CALC, "(B>80?MAX(A*0.82,3E-9):MIN(A*1.2,1.2E-3))*(0.98+0.04*RNDM)")
+    field(VAL,  "1.2E-3")
+    field(EGU,  "mbar")
+    field(PREC, "2")
+    field(HOPR, "1E-2")
+    field(LOPR, "1E-9")
+    field(HIGH, "1E-4")
+    field(HSV,  "MINOR")
+    field(HIHI, "8E-4")
+    field(HHSV, "MAJOR")
+}
+
+# ------------------------------------------------------------- gate valve
+record(bo, "$(P):VLV1:CMD") {
+    field(DESC, "Gate valve command")
+    field(ZNAM, "Closed")
+    field(ONAM, "Open")
+    field(VAL,  "0")
+    field(PINI, "YES")
+}
+
+record(bi, "$(P):VLV1:STS") {
+    field(DESC, "Gate valve status")
+    field(INP,  "$(P):VLV1:CMD CP MS")
+    field(ZNAM, "Closed")
+    field(ONAM, "Open")
+}
+
+# Software interlock: force the valve closed when the vacuum degrades.
+record(calcout, "$(P):VLV1:ILK") {
+    field(DESC, "Close valve on bad vacuum")
+    field(SCAN, "1 second")
+    field(INPA, "$(P):GA1:PRES NPP NMS")
+    field(CALC, "A>1.0E-4")
+    field(OOPT, "Transition To Non-zero")
+    field(DOPT, "Use OCAL")
+    field(OCAL, "0")
+    field(OUT,  "$(P):VLV1:CMD PP NMS")
+}
+
+record(calc, "$(P):ILK:OK") {
+    field(DESC, "Vacuum interlock permit (1=OK)")
+    field(INPA, "$(P):GA1:PRES CP NMS")
+    field(CALC, "A<=1.0E-4")
+    field(LOW,  "0.5")
+    field(LSV,  "MAJOR")
+    field(HOPR, "1")
+    field(LOPR, "0")
+}

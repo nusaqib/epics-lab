@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>EPICS Lab</name>
+  <width>620</width>
+  <height>420</height>
+  <widget type="label" version="2.0.0">
+    <name>Title</name>
+    <text>EPICS Lab — Overview</text>
+    <x>20</x>
+    <y>15</y>
+    <width>400</width>
+    <height>35</height>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="24"/>
+    </font>
+  </widget>
+
+  <widget type="group" version="2.0.0">
+    <name>Summary</name>
+    <x>20</x>
+    <y>70</y>
+    <width>360</width>
+    <height>230</height>
+    <widget type="label" version="2.0.0">
+      <text>Cold head temperature</text>
+      <x>10</x><y>10</y><width>190</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:CRYO:TC1:TEMP</pv_name>
+      <x>210</x><y>10</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Chamber pressure</text>
+      <x>10</x><y>40</y><width>190</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:VAC:GA1:PRES</pv_name>
+      <x>210</x><y>40</y><width>110</width><height>20</height>
+      <format>2</format>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Axis 1 position</text>
+      <x>10</x><y>70</y><width>190</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:MOT:M1:RBV</pv_name>
+      <x>210</x><y>70</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Vacuum interlock OK</text>
+      <x>10</x><y>100</y><width>190</width><height>20</height>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <pv_name>LAB:VAC:ILK:OK</pv_name>
+      <x>210</x><y>100</y><width>20</width><height>20</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Compressor</text>
+      <x>10</x><y>130</y><width>190</width><height>20</height>
+    </widget>
+    <widget type="led" version="2.0.0">
+      <pv_name>LAB:CRYO:CMP1:STS</pv_name>
+      <x>210</x><y>130</y><width>20</width><height>20</height>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <text>Turbo pump speed</text>
+      <x>10</x><y>160</y><width>190</width><height>20</height>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <pv_name>LAB:VAC:PMP1:SPEED</pv_name>
+      <x>210</x><y>160</y><width>110</width><height>20</height>
+      <show_units>true</show_units>
+    </widget>
+  </widget>
+
+  <widget type="group" version="2.0.0">
+    <name>Screens</name>
+    <x>420</x>
+    <y>70</y>
+    <width>170</width>
+    <height>230</height>
+    <widget type="action_button" version="3.0.0">
+      <actions>
+        <action type="open_display">
+          <file>cryo.bob</file>
+          <target>tab</target>
+          <description>Cryogenics</description>
+        </action>
+      </actions>
+      <text>Cryogenics</text>
+      <x>10</x><y>10</y><width>130</width><height>35</height>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <actions>
+        <action type="open_display">
+          <file>vacuum.bob</file>
+          <target>tab</target>
+          <description>Vacuum</description>
+        </action>
+      </actions>
+      <text>Vacuum</text>
+      <x>10</x><y>60</y><width>130</width><height>35</height>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <actions>
+        <action type="open_display">
+          <file>motion.bob</file>
+          <target>tab</target>
+          <description>Motion</description>
+        </action>
+      </actions>
+      <text>Motion</text>
+      <x>10</x><y>110</y><width>130</width><height>35</height>
+    </widget>
+  </widget>
+
+  <widget type="label" version="2.0.0">
+    <name>Footer</name>
+    <text>Alarms: Applications &gt; Alarm &gt; Alarm Tree (config "Lab") — Trends: Data Browser via Archiver Appliance</text>
+    <x>20</x>
+    <y>330</y>
+    <width>580</width>
+    <height>40</height>
+    <font>
+      <font family="Liberation Sans" style="ITALIC" size="12"/>
+    </font>
+  </widget>
+</display>

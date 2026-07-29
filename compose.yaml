@@ -1,0 +1,480 @@
+# ---------------------------------------------------------------------------
+# EPICS Lab — full control-system stack.
+#
+# Core services (started by `make up` / `docker compose up -d`):
+#   ioc-cryo / ioc-vacuum / ioc-motion   simulated EPICS 7 IOCs
+#   ca-gateway / pva-gateway             the only control-plane entry points
+#   archiver (+ archiver-db)             EPICS Archiver Appliance + MariaDB
+#   kafka (+ kafka-init) / alarm-server  Phoebus alarm system
+#   channelfinder (+ channelfinder-es)   ChannelFinder directory service
+#   recceiver                            RecSync server: IOCs -> ChannelFinder
+#   caputlog                             central log of trapped CA writes
+#   pv-exporter                          PV -> Prometheus metrics bridge
+#
+# Profiles:
+#   monitoring  Prometheus + Grafana
+#   tools       one-shot jobs: archiver-bootstrap, alarm-import
+#   test        containerized pytest integration suite
+# ---------------------------------------------------------------------------
+name: epics-lab
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-ioc-common: &ioc-common
+  image: epics-lab/softioc:${EPICS_LAB_TAG:-dev}
+  build:
+    context: images/epics
+    target: softioc
+  restart: unless-stopped
+  logging: *default-logging
+  networks: [epics]
+
+services:
+  # ------------------------------------------------------------------ IOCs
+  ioc-cryo:
+    <<: *ioc-common
+    hostname: ioc-cryo
+    environment:
+      IOC_NAME: ioc-cryo
+      IOC_PREFIX: LAB:CRYO
+      CAPUTLOG_ADDR: caputlog:7004
+    volumes:
+      - ./iocs/cryo:/config:ro
+      - ./iocs/common:/common:ro
+      - ioc-cryo-autosave:/autosave
+    # Static IP: gateways/archiver/alarm-server resolve IOC hostnames once at
+    # startup, so IOC addresses must survive container recreation.
+    networks:
+      epics:
+        ipv4_address: 172.28.1.11
+    healthcheck: &ioc-healthcheck
+      test: ["CMD-SHELL", "pvget -w 3 $${IOC_PREFIX}:IOC:HEARTBEAT >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  ioc-vacuum:
+    <<: *ioc-common
+    hostname: ioc-vacuum
+    environment:
+      IOC_NAME: ioc-vacuum
+      IOC_PREFIX: LAB:VAC
+      CAPUTLOG_ADDR: caputlog:7004
+    volumes:
+      - ./iocs/vacuum:/config:ro
+      - ./iocs/common:/common:ro
+      - ioc-vacuum-autosave:/autosave
+    networks:
+      epics:
+        ipv4_address: 172.28.1.12
+    healthcheck: *ioc-healthcheck
+
+  ioc-motion:
+    <<: *ioc-common
+    hostname: ioc-motion
+    environment:
+      IOC_NAME: ioc-motion
+      IOC_PREFIX: LAB:MOT
+      CAPUTLOG_ADDR: caputlog:7004
+    volumes:
+      - ./iocs/motion:/config:ro
+      - ./iocs/common:/common:ro
+      - ioc-motion-autosave:/autosave
+    networks:
+      epics:
+        ipv4_address: 172.28.1.13
+    healthcheck: *ioc-healthcheck
+
+  # --------------------------------------------------------------- Caput log
+  # Central iocLogServer collecting trapped CA writes from all IOCs
+  # (caPutLog module + TRAPWRITE in iocs/common/lab.acf).
+  # View with: make caputlog
+  caputlog:
+    image: epics-lab/softioc:${EPICS_LAB_TAG:-dev}
+    build:
+      context: images/epics
+      target: softioc
+    restart: unless-stopped
+    logging: *default-logging
+    entrypoint: ["/opt/epics/base/bin/host/iocLogServer"]
+    environment:
+      EPICS_IOC_LOG_PORT: 7004
+      EPICS_IOC_LOG_FILE_NAME: /logs/caput.log
+      EPICS_IOC_LOG_FILE_LIMIT: "10000000"
+    volumes:
+      - caputlog-data:/logs
+    # Static IP: IOC log clients resolve this address once at boot.
+    networks:
+      epics:
+        ipv4_address: 172.28.1.9
+
+  # -------------------------------------------------------------- Gateways
+  ca-gateway:
+    image: epics-lab/ca-gateway:${EPICS_LAB_TAG:-dev}
+    build:
+      context: images/epics
+      target: ca-gateway
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      ioc-cryo: {condition: service_started}
+      ioc-vacuum: {condition: service_started}
+      ioc-motion: {condition: service_started}
+    command:
+      - gateway
+      - -sip
+      - 0.0.0.0
+      - -cip
+      - ioc-cryo ioc-vacuum ioc-motion
+      - -pvlist
+      - /config/ca-gateway.pvlist
+      - -access
+      - /config/ca-gateway.access
+      - -prefix
+      - LAB:CAGW
+    volumes:
+      - ./gateway:/config:ro
+    ports:
+      - "5064:5064/tcp"
+      - "5064:5064/udp"
+      - "5065:5065/tcp"
+      - "5065:5065/udp"
+
+  pva-gateway:
+    image: epics-lab/pva-gateway:${EPICS_LAB_TAG:-dev}
+    build: images/pva-gateway
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      ioc-cryo: {condition: service_started}
+      ioc-vacuum: {condition: service_started}
+      ioc-motion: {condition: service_started}
+    command: ["pvagw", "/config/pva-gateway.json"]
+    volumes:
+      - ./gateway:/config:ro
+    ports:
+      - "5075:5075/tcp"
+      - "5076:5076/udp"
+
+  # -------------------------------------------------------------- Archiver
+  archiver-db:
+    image: mariadb:${MARIADB_VERSION:-10.11}
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ARCHAPPL_DB_ROOT_PASSWORD:-archappl-root}
+      MARIADB_DATABASE: archappl
+      MARIADB_USER: archappl
+      MARIADB_PASSWORD: ${ARCHAPPL_DB_PASSWORD:-archappl}
+    volumes:
+      - archiver-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  archiver:
+    image: epics-lab/archiver:${EPICS_LAB_TAG:-dev}
+    build: images/archiver
+    hostname: archiver
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      archiver-db: {condition: service_healthy}
+    environment:
+      ARCHAPPL_DB_HOST: archiver-db
+      ARCHAPPL_DB_NAME: archappl
+      ARCHAPPL_DB_USER: archappl
+      ARCHAPPL_DB_PASSWORD: ${ARCHAPPL_DB_PASSWORD:-archappl}
+      EPICS_CA_ADDR_LIST: ioc-cryo ioc-vacuum ioc-motion
+      EPICS_CA_AUTO_ADDR_LIST: "NO"
+      JAVA_OPTS: -XX:MaxRAMPercentage=50
+    volumes:
+      - archiver-sts:/data/sts
+      - archiver-mts:/data/mts
+      - archiver-lts:/data/lts
+    ports:
+      - "17665:17665"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:17665/mgmt/bpl/getApplianceInfo >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
+
+  # ---------------------------------------------------------------- Alarms
+  kafka:
+    image: apache/kafka:${KAFKA_VERSION:-3.7.0}
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:29092,CONTROLLER://:29093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://${KAFKA_EXTERNAL_HOST:-localhost}:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:29092 >/dev/null 2>&1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+  kafka-init:
+    image: apache/kafka:${KAFKA_VERSION:-3.7.0}
+    networks: [epics]
+    restart: "no"
+    depends_on:
+      kafka: {condition: service_healthy}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        BS=kafka:29092
+        # Alarm config/state topic must be compacted so the latest configuration survives.
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server $$BS --create --if-not-exists \
+          --topic Lab --partitions 1 --replication-factor 1 \
+          --config cleanup.policy=compact --config segment.ms=10000 \
+          --config min.cleanable.dirty.ratio=0.01
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server $$BS --create --if-not-exists \
+          --topic LabCommand --partitions 1 --replication-factor 1 \
+          --config cleanup.policy=delete --config retention.ms=20000
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server $$BS --create --if-not-exists \
+          --topic LabTalk --partitions 1 --replication-factor 1 \
+          --config cleanup.policy=delete --config retention.ms=20000
+        echo "Kafka alarm topics ready"
+
+  alarm-server:
+    image: epics-lab/alarm-server:${EPICS_LAB_TAG:-dev}
+    build: images/alarm-server
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      kafka: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+      ioc-cryo: {condition: service_started}
+      ioc-vacuum: {condition: service_started}
+      ioc-motion: {condition: service_started}
+    command: ["-settings", "/config/alarm-server.ini", "-config", "Lab", "-noshell"]
+    volumes:
+      - ./alarms:/config:ro
+
+  # ---------------------------------------------------------- Channel Finder
+  channelfinder-es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION:-8.11.4}
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - channelfinder-es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+
+  channelfinder:
+    image: epics-lab/channelfinder:${EPICS_LAB_TAG:-dev}
+    build: images/channelfinder
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      channelfinder-es: {condition: service_healthy}
+    volumes:
+      - ./channelfinder/application.properties:/config/application.properties:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/ChannelFinder >/dev/null"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+
+  recceiver:
+    image: epics-lab/recceiver:${EPICS_LAB_TAG:-dev}
+    build: images/recceiver
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      channelfinder: {condition: service_healthy}
+      ioc-cryo: {condition: service_started}
+      ioc-vacuum: {condition: service_started}
+      ioc-motion: {condition: service_started}
+    volumes:
+      - ./channelfinder/recceiver.conf:/config/recceiver.conf:ro
+      - ./channelfinder/channelfinderapi.conf:/etc/channelfinderapi.conf:ro
+
+  # ----------------------------------------------------------- Observability
+  pv-exporter:
+    image: epics-lab/pv-exporter:${EPICS_LAB_TAG:-dev}
+    build: services/pv-exporter
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      ioc-cryo: {condition: service_started}
+      ioc-vacuum: {condition: service_started}
+      ioc-motion: {condition: service_started}
+    environment:
+      EPICS_PVA_ADDR_LIST: ioc-cryo ioc-vacuum ioc-motion
+      EPICS_PVA_AUTO_ADDR_LIST: "NO"
+    command: ["--config", "/config/pvs.yaml", "--port", "9114"]
+    volumes:
+      - ./monitoring/pv-exporter.yaml:/config/pvs.yaml:ro
+    ports:
+      - "9114:9114"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:9114/metrics', timeout=3)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-v2.53.0}
+    profiles: [monitoring]
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-11.1.0}
+    profiles: [monitoring]
+    restart: unless-stopped
+    logging: *default-logging
+    networks: [epics]
+    depends_on:
+      prometheus: {condition: service_started}
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+  # ------------------------------------------------------------ One-shot jobs
+  archiver-bootstrap:
+    image: python:3.12-slim
+    profiles: [tools]
+    networks: [epics]
+    restart: "no"
+    depends_on:
+      archiver: {condition: service_started}
+    volumes:
+      - ./scripts:/work/scripts:ro
+      - ./archiver:/work/archiver:ro
+    command:
+      - python
+      - /work/scripts/bootstrap_archiver.py
+      - --url
+      - http://archiver:17665
+      - --pvlist
+      - /work/archiver/pvlist.txt
+      - --wait
+      - "300"
+
+  alarm-import:
+    image: epics-lab/alarm-server:${EPICS_LAB_TAG:-dev}
+    build: images/alarm-server
+    profiles: [tools]
+    networks: [epics]
+    restart: "no"
+    depends_on:
+      kafka: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+    command: ["-settings", "/config/alarm-server.ini", "-config", "Lab", "-import", "/config/lab_alarms.xml"]
+    volumes:
+      - ./alarms:/config:ro
+
+  # ------------------------------------------------------------------- Tests
+  tests:
+    image: epics-lab/tests:${EPICS_LAB_TAG:-dev}
+    build: tests
+    profiles: [test]
+    networks: [epics]
+    depends_on:
+      ioc-cryo: {condition: service_healthy}
+      ioc-vacuum: {condition: service_healthy}
+      ioc-motion: {condition: service_healthy}
+      ca-gateway: {condition: service_started}
+      pva-gateway: {condition: service_started}
+      archiver: {condition: service_started}
+      kafka: {condition: service_healthy}
+      alarm-server: {condition: service_started}
+      channelfinder: {condition: service_healthy}
+      recceiver: {condition: service_started}
+      caputlog: {condition: service_started}
+    volumes:
+      - caputlog-data:/caputlog:ro
+    environment:
+      # All PV traffic is forced through the gateways so tests exercise the
+      # same path operator tools use.
+      EPICS_CA_ADDR_LIST: ca-gateway
+      EPICS_CA_AUTO_ADDR_LIST: "NO"
+      EPICS_PVA_ADDR_LIST: pva-gateway
+      EPICS_PVA_AUTO_ADDR_LIST: "NO"
+      ARCHIVER_URL: http://archiver:17665
+      KAFKA_BOOTSTRAP: kafka:29092
+      ALARM_TOPIC: Lab
+      CF_URL: http://channelfinder:8080/ChannelFinder
+
+networks:
+  epics:
+    driver: bridge
+    # Fixed subnet so the recceiver announcement broadcast address is
+    # deterministic (see channelfinder/recceiver.conf).
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  ioc-cryo-autosave:
+  ioc-vacuum-autosave:
+  ioc-motion-autosave:
+  caputlog-data:
+  archiver-db-data:
+  channelfinder-es-data:
+  archiver-sts:
+  archiver-mts:
+  archiver-lts:
+  prometheus-data:
+  grafana-data:

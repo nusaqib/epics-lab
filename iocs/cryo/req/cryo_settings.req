@@ -1,0 +1,3 @@
+# Operator settings restored across IOC restarts
+$(P):TC1:SP
+$(P):CMP1:RUN

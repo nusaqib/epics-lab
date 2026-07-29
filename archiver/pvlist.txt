@@ -1,0 +1,23 @@
+# PVs submitted to the Archiver Appliance by `make bootstrap`
+# (scripts/bootstrap_archiver.py). One PV per line, `#` for comments.
+
+# Cryogenics
+LAB:CRYO:TC1:TEMP
+LAB:CRYO:TC2:TEMP
+LAB:CRYO:TC1:SP
+LAB:CRYO:HTR1:POWER
+LAB:CRYO:HE:PRES
+
+# Vacuum
+LAB:VAC:GA1:PRES
+LAB:VAC:PMP1:SPEED
+LAB:VAC:ILK:OK
+
+# Motion
+LAB:MOT:M1:RBV
+LAB:MOT:M1:SP
+
+# IOC health
+LAB:CRYO:IOC:HEARTBEAT
+LAB:VAC:IOC:HEARTBEAT
+LAB:MOT:IOC:HEARTBEAT

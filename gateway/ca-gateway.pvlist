@@ -1,0 +1,6 @@
+# CA gateway PV name filter.
+# Only PVs in the LAB: namespace are visible through the gateway.
+EVALUATION ORDER DENY, ALLOW
+
+LAB:.*    ALLOW
+.*        DENY

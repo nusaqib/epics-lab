@@ -1,0 +1,9 @@
+# Channel Access security for all lab IOCs (mounted at /common/lab.acf).
+#
+# Same open read/write policy as before, but WRITE is trapped so caPutLog
+# can record every put (who, from where, old -> new value). Tighten with
+# UAG/HAG rules before production use.
+ASG(DEFAULT) {
+    RULE(1, READ)
+    RULE(1, WRITE, TRAPWRITE)
+}

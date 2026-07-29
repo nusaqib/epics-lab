@@ -1,0 +1,71 @@
+# Motion axis simulation (without the motor record, to keep the generic
+# IOC free of site modules).
+#
+# The readback slews towards the target position at the configured
+# velocity, updated at 10 Hz. Soft limit-switch PVs raise MINOR alarms at
+# the ends of travel.
+#
+# Macros:  P  PV prefix, e.g. LAB:MOT
+
+record(ao, "$(P):M1:SP") {
+    field(DESC, "Axis 1 target position")
+    field(EGU,  "mm")
+    field(PREC, "3")
+    field(DRVL, "-100")
+    field(DRVH, "100")
+    field(VAL,  "0")
+    field(PINI, "YES")
+}
+
+record(ao, "$(P):M1:VELO") {
+    field(DESC, "Axis 1 velocity")
+    field(EGU,  "mm/s")
+    field(PREC, "2")
+    field(DRVL, "0.1")
+    field(DRVH, "20")
+    field(VAL,  "5")
+    field(PINI, "YES")
+}
+
+record(calc, "$(P):M1:RBV") {
+    field(DESC, "Axis 1 position readback")
+    field(SCAN, ".1 second")
+    field(INPA, "$(P):M1:RBV NPP NMS")
+    field(INPB, "$(P):M1:SP NPP NMS")
+    field(INPC, "$(P):M1:VELO NPP NMS")
+    field(CALC, "ABS(B-A)<=C*0.1?B:A+(B>A?1:-1)*C*0.1")
+    field(VAL,  "0")
+    field(EGU,  "mm")
+    field(PREC, "3")
+    field(HOPR, "100")
+    field(LOPR, "-100")
+}
+
+record(calc, "$(P):M1:DMOV") {
+    field(DESC, "Axis 1 done moving (1=done)")
+    field(INPA, "$(P):M1:RBV CP NMS")
+    field(INPB, "$(P):M1:SP NPP NMS")
+    field(CALC, "ABS(B-A)<0.001?1:0")
+    field(HOPR, "1")
+    field(LOPR, "0")
+}
+
+record(calc, "$(P):M1:HLS") {
+    field(DESC, "Axis 1 high limit switch")
+    field(INPA, "$(P):M1:RBV CP NMS")
+    field(CALC, "A>=99.999")
+    field(HIGH, "0.5")
+    field(HSV,  "MINOR")
+    field(HOPR, "1")
+    field(LOPR, "0")
+}
+
+record(calc, "$(P):M1:LLS") {
+    field(DESC, "Axis 1 low limit switch")
+    field(INPA, "$(P):M1:RBV CP NMS")
+    field(CALC, "A<=-99.999")
+    field(HIGH, "0.5")
+    field(HSV,  "MINOR")
+    field(HOPR, "1")
+    field(LOPR, "0")
+}
