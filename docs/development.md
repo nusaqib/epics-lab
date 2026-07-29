@@ -48,7 +48,10 @@ module to the generic IOC).
      nothing — reccaster registers the new IOC automatically);
    - add `depends_on` entries for the gateways/tests if the new IOC should
      gate them.
-4. `make up && make bootstrap && make test`, and extend `tests/` with at
+4. Document the new PVs in [pv-catalog.md](pv-catalog.md); tag records that
+   should be archived with `info(archive, "monitor@1.0")` so the intent
+   shows up in ChannelFinder.
+5. `make up && make bootstrap && make test`, and extend `tests/` with at
    least a read test for the new PVs.
 
 ## Adding a support module to the generic IOC

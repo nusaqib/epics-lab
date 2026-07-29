@@ -41,6 +41,18 @@ def test_recsync_populates_channels():
     assert properties.get("pvStatus") == "Active"
 
 
+def test_info_tags_become_properties():
+    """db info() tags (infotags in recceiver.conf) surface as CF properties."""
+    channels = wait_for(
+        lambda: _channels("LAB:CRYO:TC1:TEMP") or None,
+        timeout=120, interval=10, desc="LAB:CRYO:TC1:TEMP in ChannelFinder",
+    )
+    properties = {p["name"]: p.get("value") for p in channels[0]["properties"]}
+    assert properties.get("archive") == "monitor@1.0", properties
+    assert properties.get("recordType") == "calc", properties
+    assert properties.get("recordDesc"), "recordDesc missing"
+
+
 def test_all_areas_registered():
     for prefix, ioc in (("LAB:CRYO", "ioc-cryo"),
                         ("LAB:VAC", "ioc-vacuum"),

@@ -125,6 +125,7 @@ docs/                 architecture, development, operations, ADRs
 ## Documentation
 
 - [docs/architecture.md](docs/architecture.md) — components and data flow
+- [docs/pv-catalog.md](docs/pv-catalog.md) — every PV: units, alarms, archived/exported flags
 - [docs/development.md](docs/development.md) — adding IOCs, PVs, displays
 - [docs/operations.md](docs/operations.md) — runbook, backup, production hardening
 - [docs/naming-conventions.md](docs/naming-conventions.md) — PV naming rules

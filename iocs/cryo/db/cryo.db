@@ -9,6 +9,7 @@
 
 # ---------------------------------------------------------------- setpoint
 record(ao, "$(P):TC1:SP") {
+    info(archive, "monitor@1.0")
     field(DESC, "Cold head setpoint")
     field(EGU,  "K")
     field(PREC, "2")
@@ -20,6 +21,7 @@ record(ao, "$(P):TC1:SP") {
 
 # ------------------------------------------------------------ temperatures
 record(calc, "$(P):TC1:TEMP") {
+    info(archive, "monitor@1.0")
     field(DESC, "Cold head temperature")
     field(SCAN, "1 second")
     field(INPA, "$(P):TC1:TEMP NPP NMS")
@@ -38,6 +40,7 @@ record(calc, "$(P):TC1:TEMP") {
 }
 
 record(calc, "$(P):TC2:TEMP") {
+    info(archive, "monitor@1.0")
     field(DESC, "Radiation shield temperature")
     field(SCAN, "1 second")
     field(INPA, "$(P):TC2:TEMP NPP NMS")
@@ -56,6 +59,7 @@ record(calc, "$(P):TC2:TEMP") {
 
 # ---------------------------------------------------------------- heater
 record(calc, "$(P):HTR1:POWER") {
+    info(archive, "monitor@1.0")
     field(DESC, "Heater output (simple P controller)")
     field(SCAN, "1 second")
     field(INPA, "$(P):TC1:TEMP NPP NMS")
@@ -85,6 +89,7 @@ record(bi, "$(P):CMP1:STS") {
 }
 
 record(calc, "$(P):HE:PRES") {
+    info(archive, "monitor@1.0")
     field(DESC, "Helium supply pressure")
     field(SCAN, "2 second")
     field(INPA, "$(P):CMP1:RUN NPP NMS")

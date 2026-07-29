@@ -8,6 +8,7 @@
 # Macros:  P  PV prefix, e.g. LAB:MOT
 
 record(ao, "$(P):M1:SP") {
+    info(archive, "monitor@1.0")
     field(DESC, "Axis 1 target position")
     field(EGU,  "mm")
     field(PREC, "3")
@@ -28,6 +29,7 @@ record(ao, "$(P):M1:VELO") {
 }
 
 record(calc, "$(P):M1:RBV") {
+    info(archive, "monitor@1.0")
     field(DESC, "Axis 1 position readback")
     field(SCAN, ".1 second")
     field(INPA, "$(P):M1:RBV NPP NMS")

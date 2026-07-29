@@ -17,6 +17,7 @@ record(bo, "$(P):PMP1:RUN") {
 }
 
 record(calc, "$(P):PMP1:SPEED") {
+    info(archive, "monitor@1.0")
     field(DESC, "Turbo pump speed")
     field(SCAN, "1 second")
     field(INPA, "$(P):PMP1:SPEED NPP NMS")
@@ -31,6 +32,7 @@ record(calc, "$(P):PMP1:SPEED") {
 
 # ------------------------------------------------------------- gauge
 record(calc, "$(P):GA1:PRES") {
+    info(archive, "monitor@1.0")
     field(DESC, "Chamber pressure")
     field(SCAN, "1 second")
     field(INPA, "$(P):GA1:PRES NPP NMS")
@@ -76,6 +78,7 @@ record(calcout, "$(P):VLV1:ILK") {
 }
 
 record(calc, "$(P):ILK:OK") {
+    info(archive, "monitor@1.0")
     field(DESC, "Vacuum interlock permit (1=OK)")
     field(INPA, "$(P):GA1:PRES CP NMS")
     field(CALC, "A<=1.0E-4")
