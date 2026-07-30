@@ -50,3 +50,8 @@ everything is Docker Compose (`compose.yaml` is the source of truth).
   peer container, never loopback.
 - Archiver Appliance 1.1.0 WARs need Java 17 (`tomcat:9-jdk17-temurin`).
 - pyCFClient isn't on PyPI; recsync's `pip install ./server` pins it itself.
+- oac-tree build deps are non-obvious (EPICS_HOST_ARCH env, pkg-config, Asio,
+  OpenSSL, -rpath-link for transitive PVXS/CA libs) — all encoded in
+  images/oac-tree/Dockerfile; plugins live in lib/oac-tree/plugins.
+- Heavy `make build` runs can OOM-kill running stack containers (exit 137);
+  `make up` afterwards restores them.

@@ -34,6 +34,7 @@ jobs:
           import xml.etree.ElementTree as ET
           files = (glob.glob('alarms/*.xml')
                    + glob.glob('images/archiver/conf/*.xml')
+                   + glob.glob('procedures/*.xml')
                    + glob.glob('phoebus/displays/*.bob'))
           for f in files:
               ET.parse(f)
@@ -60,6 +61,11 @@ jobs:
 
       - name: Run integration tests
         run: docker compose --profile test run --rm tests
+
+      - name: Run the example oac-tree procedure
+        run: |
+          docker compose --profile tools run --rm oac-tree -f /procedures/vacuum_pumpdown.xml -V
+          docker compose --profile tools run --rm oac-tree -f /procedures/vacuum_pumpdown.xml
 
       - name: Dump logs on failure
         if: failure()

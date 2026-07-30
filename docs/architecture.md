@@ -24,6 +24,9 @@ graph TB
         CF[ChannelFinder]
         ES[(Elasticsearch)]
         RS[recceiver]
+        PVI[pvinfo<br/>PV Info UI]
+        CPL[caputlog]
+        OAC[oac-tree<br/>sequencer]
         PE[pv-exporter]
         PR[Prometheus]
         GR[Grafana]
@@ -43,6 +46,9 @@ graph TB
     C & V & M -->|reccaster TCP| RS
     RS -->|REST| CF
     CF --- ES
+    PVI -->|proxy| CF & AA
+    C & V & M -->|trapped puts| CPL
+    OAC -->|CA/PVA| CAGW & PVAGW
     PE -->|PVA monitors| C & V & M
     PR --> PE
     GR --> PR
@@ -53,6 +59,7 @@ graph TB
     CLI --> CAGW & PVAGW
     PH -->|:8080| CF
     WEB -->|:17665 / :8080 / :3000| AA & CF & GR
+    WEB -->|:8082| PVI
 ```
 
 ## Key design points

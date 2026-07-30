@@ -5,7 +5,7 @@
 ```bash
 sudo ./scripts/install_requirements.sh   # once per host: Docker + Compose v2, git, make
 cp .env.example .env                     # set real passwords
-make build                               # 15-30 min first time (source builds)
+make build                               # 20-40 min first time (source builds)
 make up                                  # start everything
 make bootstrap                           # archiver PV list + alarm config import
 make test                                # verify the whole chain
@@ -56,6 +56,7 @@ dependents: `docker compose restart ca-gateway pva-gateway alarm-server`.
 | Archiver | `curl http://localhost:17665/mgmt/bpl/getApplianceMetrics` |
 | Alarm server | `docker compose logs alarm-server`; state messages on the `Lab` topic |
 | ChannelFinder | `curl http://localhost:8080/ChannelFinder` and `docker compose logs recceiver` |
+| PV Info | `curl -I http://localhost:8082/pvinfo/` (compose healthcheck covers it) |
 | PV connectivity | `epics_pv_connected` metrics at `:9114/metrics` |
 
 ## Common tasks
@@ -141,3 +142,5 @@ This stack is production-*shaped*; before real beamline duty:
 | Alarm server logs Kafka errors | `kafka-init` must complete first: `docker compose up -d kafka-init` |
 | PVs missing from ChannelFinder | Check `docker compose logs recceiver` — the announce address must match the compose subnet broadcast (`channelfinder/recceiver.conf`); restart the IOC to re-announce |
 | IOC unhealthy right after start | Autosave restore + qsrv startup can take a few seconds; check `make logs S=<ioc>` |
+| Services dead after a big `make build` | Heavy parallel compiles can OOM-kill running containers (exit 137) — `make up` restores them, then `make status` |
+| Procedure fails to load a plugin | Plugin `.so` names in the XML must exist under `/opt/oac-tree/lib/oac-tree/plugins` in the oac-tree image |

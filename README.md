@@ -53,7 +53,7 @@ Bring the whole system up from a fresh Debian/Ubuntu or Fedora/RHEL host:
 sudo ./scripts/install_requirements.sh   # Docker Engine + Compose v2, git, make
 cp .env.example .env       # adjust passwords if desired
 make build                 # build all images (first build compiles EPICS base,
-                           #   Phoebus & ChannelFinder from source: 15-30 min)
+                           #   Phoebus, ChannelFinder & oac-tree from source: 20-40 min)
 make up                    # start the core stack
 make bootstrap             # archive PVs + import alarm configuration
 make test                  # run the integration test suite
